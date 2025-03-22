@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Drawing;
+using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 
 namespace HomeWork
@@ -9,15 +10,24 @@ namespace HomeWork
         public static void Main()
         {
             var input = Console.ReadLine();
-            var arr = Parser.Parse(input);
-            var opers = new List<string>();
-            var nums = new List<double>();
+            try
+            {
+                var arr = Parser.Parse(input);
+                var opers = new List<string>();
+                var nums = new List<double>();
 
-            DivideArr(nums, opers, arr);
+                DivideArr(nums, opers, arr);
 
-            var n = new MultiCalculator(opers, nums);
+                var n = new MultiCalculator(opers, nums);
 
-            Console.WriteLine(n.Runner());
+                Console.WriteLine(n.Runner());
+            }
+            catch(Exception)
+            {
+                Console.WriteLine("Неправильный ввод");
+            }
+
+
         }
 
         public static void DivideArr(List<double> nums, List<string> opers, List<string> arr)
@@ -27,7 +37,7 @@ namespace HomeWork
                 if (new string[] { "+", "-", "*", "/" }.Contains(elem))
                     opers.Add(elem);
                 else
-                    nums.Add(int.Parse(elem));
+                    nums.Add(double.Parse(elem));
             }
         }
     }
@@ -54,7 +64,7 @@ namespace HomeWork
 
     public class QuotienCalculate : ICalculator
     {
-        public double Calculate(double fst, double scd) => fst / scd;
+        public double Calculate(double fst, double scd) => scd == 0 ? throw new DivideByZeroException() : fst / scd;
     }
 
     public class Calculator(double fst, double scd, ICalculator calc)
@@ -84,16 +94,55 @@ namespace HomeWork
     {
         public static List<string> Parse(string input)
         {
-            List<string> result = new List<string>();
-            string pattern = "\\d+|[+\\-*/]";
-            MatchCollection matches = Regex.Matches(input, pattern);
-
-            foreach (Match match in matches)
+            var result = new List<string>();
+            var opersWithoutMinus = new List<char>() { '+', '/', '*' };
+            input = input.Replace(" ", "");
+            int i = 0;
+            while (i < input.Length)
             {
-                result.Add(match.Value);
+                if (input[i] == '-' && i == 0) {
+                    result.Add(input.Substring(0, 2));
+                    i += 2;
+                }
+                else if (input[i] == '-' && !opersWithoutMinus.Contains(input[i + 1]))
+                {
+                    if (opersWithoutMinus.Contains(input[i - 1]))
+                    {
+                        var r = GetIndex(input, i + 1) - i;
+                        result.Add(input.Substring(i, r));
+                        i += r;
+                    }
+                    else
+                    {
+                        result.Add(input.Substring(i, 1));
+                        i += 1;
+                    }
+                        //result.Add(opersWithoutMinus.Contains(input[i - 1]) ? input.Substring(i, 2) : input.Substring(i, 1));
+                }
+                else if (opersWithoutMinus.Contains(input[i])) {
+                    result.Add(input.Substring(i, 1));
+                    i += 1;
+                }
+                else
+                {
+                    var r = GetIndex(input, i + 1) - i;
+                    result.Add(input.Substring(i, r));
+                    i += r;
+                }
             }
 
             return result;
+        }
+
+        public static int GetIndex(string str, int l)
+        {
+            var r = l;
+            while (r < str.Length)
+            {
+                if (new char[] { '-', '+', '*', '/' }.Contains(str[r])) break;
+                r += 1;
+            }
+            return r;
         }
     }
 
