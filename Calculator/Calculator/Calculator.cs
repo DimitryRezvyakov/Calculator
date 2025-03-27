@@ -95,7 +95,7 @@ namespace HomeWork
         public static List<string> Parse(string input)
         {
             var result = new List<string>();
-            var opersWithoutMinus = new List<char>() { '+', '/', '*' };
+            var opersWithoutMinus = new List<char>() { '+', '/', '*', "-" };
             input = input.Replace(" ", "");
             int i = 0;
             while (i < input.Length)
